@@ -16,11 +16,10 @@ export interface BehaviorSimulatorOptions extends PluginOptions {
  * including mouse movements, typing patterns, and scroll behavior
  */
 export class BehaviorSimulatorPlugin extends BasePlugin {
-  private options: BehaviorSimulatorOptions;
+  protected declare options: BehaviorSimulatorOptions;
 
   constructor(options: Partial<BehaviorSimulatorOptions> = {}) {
-    super({ name: 'behavior-simulator', ...options });
-    this.options = {
+    const fullOptions: BehaviorSimulatorOptions = {
       name: 'behavior-simulator',
       enableMouseMovement: true,
       enableTypingPatterns: true,
@@ -31,6 +30,8 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
       scrollSpeed: { min: 800, max: 1500 },
       ...options,
     };
+    super(fullOptions);
+    this.options = fullOptions;
   }
 
   async onPageCreated(page: Page): Promise<void> {
@@ -437,7 +438,7 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
   async typeHumanLike(page: Page, selector: string, text: string): Promise<void> {
     await page.evaluate((sel, txt) => {
       const element = document.querySelector(sel);
-      if (element && window.__humanTypeText) {
+      if (element && element instanceof HTMLElement && window.__humanTypeText) {
         window.__humanTypeText(element, txt);
       }
     }, selector, text);

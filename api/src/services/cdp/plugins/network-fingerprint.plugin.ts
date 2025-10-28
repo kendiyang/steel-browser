@@ -15,12 +15,11 @@ export interface NetworkFingerprintOptions extends PluginOptions {
  * including TLS, HTTP/2, header order, and request timing patterns
  */
 export class NetworkFingerprintPlugin extends BasePlugin {
-  private options: NetworkFingerprintOptions;
+  protected declare options: NetworkFingerprintOptions;
   private requestTimings: Map<string, number> = new Map();
 
   constructor(options: Partial<NetworkFingerprintOptions> = {}) {
-    super({ name: 'network-fingerprint', ...options });
-    this.options = {
+    const fullOptions: NetworkFingerprintOptions = {
       name: 'network-fingerprint',
       enableHeaderRandomization: true,
       enableTLSFingerprinting: true,
@@ -47,6 +46,8 @@ export class NetworkFingerprintPlugin extends BasePlugin {
       ],
       ...options,
     };
+    super(fullOptions);
+    this.options = fullOptions;
   }
 
   async onPageCreated(page: Page): Promise<void> {
@@ -383,9 +384,13 @@ export class NetworkFingerprintPlugin extends BasePlugin {
         },
       });
 
-      this.cdpService?.logger.info(`[NetworkFingerprint] Proxy configured: ${proxyUrl}`);
+      if (this.cdpService) {
+        this.cdpService.getLogger('NetworkFingerprint').info(`Proxy configured: ${proxyUrl}`);
+      }
     } catch (error) {
-      this.cdpService?.logger.error(`[NetworkFingerprint] Error configuring proxy: ${error}`);
+      if (this.cdpService) {
+        this.cdpService.getLogger('NetworkFingerprint').error(`Error configuring proxy: ${error}`);
+      }
     } finally {
       await client.detach();
     }

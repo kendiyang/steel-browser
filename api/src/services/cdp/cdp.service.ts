@@ -354,14 +354,6 @@ export class CDPService extends EventEmitter {
     this.primaryPage = newPage;
   }
 
-  public registerPlugin(plugin: BasePlugin) {
-    return this.pluginManager.register(plugin);
-  }
-
-  public unregisterPlugin(pluginName: string) {
-    return this.pluginManager.unregister(pluginName);
-  }
-
   private async handleTargetChange(target: Target) {
     if (target.type() !== "page") return;
 

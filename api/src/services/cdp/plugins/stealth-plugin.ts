@@ -34,11 +34,10 @@ export interface StealthPluginOptions extends PluginOptions {
  * ```
  */
 export class StealthPlugin extends BasePlugin {
-  private options: StealthPluginOptions;
+  protected declare options: StealthPluginOptions;
 
   constructor(options: Partial<StealthPluginOptions> = {}) {
-    super({ name: 'stealth-plugin', ...options });
-    this.options = {
+    const fullOptions: StealthPluginOptions = {
       name: 'stealth-plugin',
       enableCanvasNoise: true,
       enableAudioNoise: true,
@@ -50,6 +49,8 @@ export class StealthPlugin extends BasePlugin {
       enableAdvancedWebdriverProtection: true,
       ...options,
     };
+    super(fullOptions);
+    this.options = fullOptions;
   }
 
   async onPageCreated(page: Page): Promise<void> {
