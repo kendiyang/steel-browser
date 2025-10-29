@@ -1,5 +1,5 @@
-import { BasePlugin, PluginOptions } from './core/base-plugin.js';
-import { Page, HTTPRequest } from 'puppeteer-core';
+import { BasePlugin, PluginOptions } from "./core/base-plugin.js";
+import { Page, HTTPRequest } from "puppeteer-core";
 
 export interface NetworkFingerprintOptions extends PluginOptions {
   enableHeaderRandomization?: boolean;
@@ -20,29 +20,29 @@ export class NetworkFingerprintPlugin extends BasePlugin {
 
   constructor(options: Partial<NetworkFingerprintOptions> = {}) {
     const fullOptions: NetworkFingerprintOptions = {
-      name: 'network-fingerprint',
+      name: "network-fingerprint",
       enableHeaderRandomization: true,
       enableTLSFingerprinting: true,
       enableHTTP2Fingerprinting: true,
       enableRequestTiming: true,
       customHeaders: {},
       headerOrder: [
-        'host',
-        'connection',
-        'cache-control',
-        'sec-ch-ua',
-        'sec-ch-ua-mobile',
-        'sec-ch-ua-platform',
-        'upgrade-insecure-requests',
-        'user-agent',
-        'accept',
-        'sec-fetch-site',
-        'sec-fetch-mode',
-        'sec-fetch-dest',
-        'referer',
-        'accept-encoding',
-        'accept-language',
-        'cookie',
+        "host",
+        "connection",
+        "cache-control",
+        "sec-ch-ua",
+        "sec-ch-ua-mobile",
+        "sec-ch-ua-platform",
+        "upgrade-insecure-requests",
+        "user-agent",
+        "accept",
+        "sec-fetch-site",
+        "sec-fetch-mode",
+        "sec-fetch-dest",
+        "referer",
+        "accept-encoding",
+        "accept-language",
+        "cookie",
       ],
       ...options,
     };
@@ -58,7 +58,7 @@ export class NetworkFingerprintPlugin extends BasePlugin {
   private async setupNetworkInterception(page: Page): Promise<void> {
     await page.setRequestInterception(true);
 
-    page.on('request', async (request: HTTPRequest) => {
+    page.on("request", async (request: HTTPRequest) => {
       try {
         const overrides: any = {};
 
@@ -99,7 +99,7 @@ export class NetworkFingerprintPlugin extends BasePlugin {
     // Randomize header casing (some browsers vary this)
     const shouldVaryCase = Math.random() < 0.3;
     if (shouldVaryCase) {
-      const randomHeader = ['Accept-Language', 'Accept-Encoding', 'Cache-Control'][
+      const randomHeader = ["Accept-Language", "Accept-Encoding", "Cache-Control"][
         Math.floor(Math.random() * 3)
       ];
       if (newHeaders[randomHeader.toLowerCase()]) {
@@ -110,28 +110,28 @@ export class NetworkFingerprintPlugin extends BasePlugin {
     }
 
     // Add slight variations to accept headers
-    if (newHeaders['accept-language']) {
-      const langs = newHeaders['accept-language'].split(',');
+    if (newHeaders["accept-language"]) {
+      const langs = newHeaders["accept-language"].split(",");
       if (langs.length > 1 && Math.random() < 0.2) {
         // Slightly randomize quality values
-        newHeaders['accept-language'] = langs
+        newHeaders["accept-language"] = langs
           .map((lang, i) => {
             if (i === 0) return lang;
             const q = 0.9 - i * 0.1 + (Math.random() - 0.5) * 0.05;
-            return lang.includes(';q=') ? lang.replace(/;q=[\d.]+/, `;q=${q.toFixed(2)}`) : lang;
+            return lang.includes(";q=") ? lang.replace(/;q=[\d.]+/, `;q=${q.toFixed(2)}`) : lang;
           })
-          .join(',');
+          .join(",");
       }
     }
 
     // Add DNT header variation
-    if (Math.random() < 0.5 && !newHeaders['dnt']) {
-      newHeaders['dnt'] = Math.random() < 0.7 ? '1' : '0';
+    if (Math.random() < 0.5 && !newHeaders["dnt"]) {
+      newHeaders["dnt"] = Math.random() < 0.7 ? "1" : "0";
     }
 
     // Add sec-gpc (Global Privacy Control) occasionally
-    if (Math.random() < 0.3 && !newHeaders['sec-gpc']) {
-      newHeaders['sec-gpc'] = '1';
+    if (Math.random() < 0.3 && !newHeaders["sec-gpc"]) {
+      newHeaders["sec-gpc"] = "1";
     }
 
     return newHeaders;
@@ -143,11 +143,11 @@ export class NetworkFingerprintPlugin extends BasePlugin {
 
     if (lastRequest) {
       const timeSinceLastRequest = now - lastRequest;
-      
+
       // Add realistic delays between same requests
       if (timeSinceLastRequest < 100) {
         const delay = 50 + Math.random() * 100;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -373,23 +373,23 @@ export class NetworkFingerprintPlugin extends BasePlugin {
    */
   async configureProxy(page: Page, proxyUrl: string): Promise<void> {
     const client = await page.target().createCDPSession();
-    
+
     try {
-      await client.send('Network.enable');
-      
+      await client.send("Network.enable");
+
       // Set proxy
-      await client.send('Network.setExtraHTTPHeaders', {
+      await client.send("Network.setExtraHTTPHeaders", {
         headers: {
-          'Proxy-Connection': 'keep-alive',
+          "Proxy-Connection": "keep-alive",
         },
       });
 
       if (this.cdpService) {
-        this.cdpService.getLogger('NetworkFingerprint').info(`Proxy configured: ${proxyUrl}`);
+        this.cdpService.getLogger("NetworkFingerprint").info(`Proxy configured: ${proxyUrl}`);
       }
     } catch (error) {
       if (this.cdpService) {
-        this.cdpService.getLogger('NetworkFingerprint').error(`Error configuring proxy: ${error}`);
+        this.cdpService.getLogger("NetworkFingerprint").error(`Error configuring proxy: ${error}`);
       }
     } finally {
       await client.detach();
@@ -399,46 +399,46 @@ export class NetworkFingerprintPlugin extends BasePlugin {
   /**
    * Generate realistic header order based on browser type
    */
-  getRealisticHeaderOrder(browserType: 'chrome' | 'firefox' | 'safari' = 'chrome'): string[] {
+  getRealisticHeaderOrder(browserType: "chrome" | "firefox" | "safari" = "chrome"): string[] {
     const headerOrders = {
       chrome: [
-        'host',
-        'connection',
-        'cache-control',
-        'sec-ch-ua',
-        'sec-ch-ua-mobile',
-        'sec-ch-ua-platform',
-        'upgrade-insecure-requests',
-        'user-agent',
-        'accept',
-        'sec-fetch-site',
-        'sec-fetch-mode',
-        'sec-fetch-dest',
-        'referer',
-        'accept-encoding',
-        'accept-language',
-        'cookie',
+        "host",
+        "connection",
+        "cache-control",
+        "sec-ch-ua",
+        "sec-ch-ua-mobile",
+        "sec-ch-ua-platform",
+        "upgrade-insecure-requests",
+        "user-agent",
+        "accept",
+        "sec-fetch-site",
+        "sec-fetch-mode",
+        "sec-fetch-dest",
+        "referer",
+        "accept-encoding",
+        "accept-language",
+        "cookie",
       ],
       firefox: [
-        'host',
-        'user-agent',
-        'accept',
-        'accept-language',
-        'accept-encoding',
-        'referer',
-        'connection',
-        'upgrade-insecure-requests',
-        'cookie',
+        "host",
+        "user-agent",
+        "accept",
+        "accept-language",
+        "accept-encoding",
+        "referer",
+        "connection",
+        "upgrade-insecure-requests",
+        "cookie",
       ],
       safari: [
-        'host',
-        'accept',
-        'user-agent',
-        'accept-language',
-        'accept-encoding',
-        'connection',
-        'referer',
-        'cookie',
+        "host",
+        "accept",
+        "user-agent",
+        "accept-language",
+        "accept-encoding",
+        "connection",
+        "referer",
+        "cookie",
       ],
     };
 

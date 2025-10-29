@@ -75,7 +75,7 @@ const envSchema = z.object({
     .transform((val) => val === "true" || val === "1")
     .default("false"),
   LOG_STORAGE_PATH: z.string().optional(),
-  
+
   // Anti-Detection Plugin Configuration
   ENABLE_STEALTH_PLUGIN: z
     .string()

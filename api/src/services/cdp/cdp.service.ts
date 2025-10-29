@@ -179,7 +179,7 @@ export class CDPService extends EventEmitter {
       this.emit(EmitEvent.Log, event);
     });
     this.logger.info("[CDPService] Target instrumentation enabled");
-    
+
     // Initialize anti-detection plugins
     this.initializePlugins();
   }
@@ -191,55 +191,67 @@ export class CDPService extends EventEmitter {
     try {
       // Import plugins dynamically to avoid circular dependencies
       if (env.ENABLE_STEALTH_PLUGIN) {
-        import('./plugins/stealth-plugin.js').then(({ StealthPlugin }) => {
-          this.registerPlugin(new StealthPlugin({
-            name: 'stealth',
-            enableCanvasNoise: env.STEALTH_CANVAS_NOISE,
-            enableAudioNoise: env.STEALTH_AUDIO_NOISE,
-            enableWebRTCProtection: env.STEALTH_WEBRTC_PROTECTION,
-            enableChromeRuntime: true,
-            enableNavigatorPlugins: true,
-            enableAdvancedWebdriverProtection: true,
-            enablePermissionsSpoof: true,
-            enableTimingProtection: true,
-          }));
-          this.logger.info('[CDPService] StealthPlugin registered');
-        }).catch((err) => {
-          this.logger.error(`[CDPService] Failed to load StealthPlugin: ${err}`);
-        });
+        import("./plugins/stealth-plugin.js")
+          .then(({ StealthPlugin }) => {
+            this.registerPlugin(
+              new StealthPlugin({
+                name: "stealth",
+                enableCanvasNoise: env.STEALTH_CANVAS_NOISE,
+                enableAudioNoise: env.STEALTH_AUDIO_NOISE,
+                enableWebRTCProtection: env.STEALTH_WEBRTC_PROTECTION,
+                enableChromeRuntime: true,
+                enableNavigatorPlugins: true,
+                enableAdvancedWebdriverProtection: true,
+                enablePermissionsSpoof: true,
+                enableTimingProtection: true,
+              }),
+            );
+            this.logger.info("[CDPService] StealthPlugin registered");
+          })
+          .catch((err) => {
+            this.logger.error(`[CDPService] Failed to load StealthPlugin: ${err}`);
+          });
       }
 
       if (env.ENABLE_BEHAVIOR_SIMULATOR) {
-        import('./plugins/behavior-simulator.plugin.js').then(({ BehaviorSimulatorPlugin }) => {
-          this.registerPlugin(new BehaviorSimulatorPlugin({
-            name: 'behavior-simulator',
-            enableMouseMovement: true,
-            enableTypingPatterns: true,
-            enableScrollMomentum: true,
-            enableRandomPauses: true,
-            mouseMovementSpeed: 'random',
-            typingSpeed: { min: 40, max: 80 },
-            scrollSpeed: { min: 800, max: 1500 },
-          }));
-          this.logger.info('[CDPService] BehaviorSimulatorPlugin registered');
-        }).catch((err) => {
-          this.logger.error(`[CDPService] Failed to load BehaviorSimulatorPlugin: ${err}`);
-        });
+        import("./plugins/behavior-simulator.plugin.js")
+          .then(({ BehaviorSimulatorPlugin }) => {
+            this.registerPlugin(
+              new BehaviorSimulatorPlugin({
+                name: "behavior-simulator",
+                enableMouseMovement: true,
+                enableTypingPatterns: true,
+                enableScrollMomentum: true,
+                enableRandomPauses: true,
+                mouseMovementSpeed: "random",
+                typingSpeed: { min: 40, max: 80 },
+                scrollSpeed: { min: 800, max: 1500 },
+              }),
+            );
+            this.logger.info("[CDPService] BehaviorSimulatorPlugin registered");
+          })
+          .catch((err) => {
+            this.logger.error(`[CDPService] Failed to load BehaviorSimulatorPlugin: ${err}`);
+          });
       }
 
       if (env.ENABLE_NETWORK_FINGERPRINT) {
-        import('./plugins/network-fingerprint.plugin.js').then(({ NetworkFingerprintPlugin }) => {
-          this.registerPlugin(new NetworkFingerprintPlugin({
-            name: 'network-fingerprint',
-            enableHeaderRandomization: true,
-            enableTLSFingerprinting: true,
-            enableHTTP2Fingerprinting: true,
-            enableRequestTiming: true,
-          }));
-          this.logger.info('[CDPService] NetworkFingerprintPlugin registered');
-        }).catch((err) => {
-          this.logger.error(`[CDPService] Failed to load NetworkFingerprintPlugin: ${err}`);
-        });
+        import("./plugins/network-fingerprint.plugin.js")
+          .then(({ NetworkFingerprintPlugin }) => {
+            this.registerPlugin(
+              new NetworkFingerprintPlugin({
+                name: "network-fingerprint",
+                enableHeaderRandomization: true,
+                enableTLSFingerprinting: true,
+                enableHTTP2Fingerprinting: true,
+                enableRequestTiming: true,
+              }),
+            );
+            this.logger.info("[CDPService] NetworkFingerprintPlugin registered");
+          })
+          .catch((err) => {
+            this.logger.error(`[CDPService] Failed to load NetworkFingerprintPlugin: ${err}`);
+          });
       }
     } catch (error) {
       this.logger.error(`[CDPService] Error initializing plugins: ${error}`);
@@ -463,58 +475,84 @@ export class CDPService extends EventEmitter {
   }
 
   private async handlePageRequest(request: HTTPRequest, page: Page) {
-    const headers = request.headers();
-    delete headers["accept-language"]; // Patch to help with headless detection
-
-    const optimize = this.launchConfig?.optimizeBandwidth;
-    const blockedHosts = typeof optimize === "object" ? optimize.blockHosts : undefined;
-    const blockedUrlPatterns = typeof optimize === "object" ? optimize.blockUrlPatterns : undefined;
-
-    if (this.launchConfig?.blockAds && isAdRequest(request.url())) {
-      this.logger.info(`[CDPService] Blocked request to ad related resource: ${request.url()}`);
-      await request.abort();
+    // 防止处理已经被处理过的请求
+    if (request.isInterceptResolutionHandled()) {
       return;
     }
 
-    if (
-      isHostBlocked(request.url(), blockedHosts) ||
-      isUrlMatchingPatterns(request.url(), blockedUrlPatterns)
-    ) {
-      this.logger.info(`[CDPService] Blocked request to blocked host or pattern: ${request.url()}`);
-      await request.abort();
-      return;
-    }
+    try {
+      const headers = request.headers();
+      delete headers["accept-language"]; // Patch to help with headless detection
 
-    // Block resources via optimizeBandwidth
-    const blockImages = typeof optimize === "object" ? !!optimize.blockImages : false;
-    const blockMedia = typeof optimize === "object" ? !!optimize.blockMedia : false;
-    const blockStylesheets = typeof optimize === "object" ? !!optimize.blockStylesheets : false;
+      const optimize = this.launchConfig?.optimizeBandwidth;
+      const blockedHosts = typeof optimize === "object" ? optimize.blockHosts : undefined;
+      const blockedUrlPatterns =
+        typeof optimize === "object" ? optimize.blockUrlPatterns : undefined;
 
-    if (blockImages || blockMedia || blockStylesheets) {
-      const resourceType = request.resourceType();
+      if (this.launchConfig?.blockAds && isAdRequest(request.url())) {
+        this.logger.info(`[CDPService] Blocked request to ad related resource: ${request.url()}`);
+        await request.abort();
+        return;
+      }
+
       if (
-        (blockImages && (resourceType === "image" || isImageRequest(request.url()))) ||
-        (blockMedia && (resourceType === "media" || isHeavyMediaRequest(request.url()))) ||
-        (blockStylesheets && resourceType === "stylesheet")
+        isHostBlocked(request.url(), blockedHosts) ||
+        isUrlMatchingPatterns(request.url(), blockedUrlPatterns)
       ) {
         this.logger.info(
-          `[CDPService] Blocked ${resourceType} resource due to optimizeBandwidth (${
-            blockImages ? "blockImages" : ""
-          }${blockMedia ? "blockMedia" : ""}${
-            blockStylesheets ? "blockStylesheets" : ""
-          }): ${request.url()}`,
+          `[CDPService] Blocked request to blocked host or pattern: ${request.url()}`,
         );
         await request.abort();
         return;
       }
-    }
 
-    if (request.url().startsWith("file://")) {
-      this.logger.error(`[CDPService] Blocked request to file protocol: ${request.url()}`);
-      page.close().catch(() => {});
-      this.shutdown();
-    } else {
+      // Block resources via optimizeBandwidth
+      const blockImages = typeof optimize === "object" ? !!optimize.blockImages : false;
+      const blockMedia = typeof optimize === "object" ? !!optimize.blockMedia : false;
+      const blockStylesheets = typeof optimize === "object" ? !!optimize.blockStylesheets : false;
+
+      if (blockImages || blockMedia || blockStylesheets) {
+        const resourceType = request.resourceType();
+        if (
+          (blockImages && (resourceType === "image" || isImageRequest(request.url()))) ||
+          (blockMedia && (resourceType === "media" || isHeavyMediaRequest(request.url()))) ||
+          (blockStylesheets && resourceType === "stylesheet")
+        ) {
+          this.logger.info(
+            `[CDPService] Blocked ${resourceType} resource due to optimizeBandwidth (${
+              blockImages ? "blockImages" : ""
+            }${blockMedia ? "blockMedia" : ""}${
+              blockStylesheets ? "blockStylesheets" : ""
+            }): ${request.url()}`,
+          );
+          await request.abort();
+          return;
+        }
+      }
+
+      if (request.url().startsWith("file://")) {
+        this.logger.error(`[CDPService] Blocked request to file protocol: ${request.url()}`);
+        await request.abort();
+        page.close().catch(() => {});
+        this.shutdown();
+        return;
+      }
+
       await request.continue({ headers });
+    } catch (error) {
+      // 如果请求已经被处理，静默忽略错误
+      if (error instanceof Error && error.message.includes("Request is already handled")) {
+        return;
+      }
+      this.logger.error(`[CDPService] Error handling request: ${error}`);
+      // 尝试继续请求，如果失败也忽略
+      try {
+        if (!request.isInterceptResolutionHandled()) {
+          await request.continue();
+        }
+      } catch (continueError) {
+        // 忽略继续请求失败的错误
+      }
     }
   }
 

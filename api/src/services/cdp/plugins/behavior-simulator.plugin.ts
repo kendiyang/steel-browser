@@ -1,12 +1,12 @@
-import { BasePlugin, PluginOptions } from './core/base-plugin.js';
-import { Page } from 'puppeteer-core';
+import { BasePlugin, PluginOptions } from "./core/base-plugin.js";
+import { Page } from "puppeteer-core";
 
 export interface BehaviorSimulatorOptions extends PluginOptions {
   enableMouseMovement?: boolean;
   enableTypingPatterns?: boolean;
   enableScrollMomentum?: boolean;
   enableRandomPauses?: boolean;
-  mouseMovementSpeed?: 'slow' | 'medium' | 'fast' | 'random';
+  mouseMovementSpeed?: "slow" | "medium" | "fast" | "random";
   typingSpeed?: { min: number; max: number }; // WPM
   scrollSpeed?: { min: number; max: number }; // pixels per second
 }
@@ -20,12 +20,12 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
 
   constructor(options: Partial<BehaviorSimulatorOptions> = {}) {
     const fullOptions: BehaviorSimulatorOptions = {
-      name: 'behavior-simulator',
+      name: "behavior-simulator",
       enableMouseMovement: true,
       enableTypingPatterns: true,
       enableScrollMomentum: true,
       enableRandomPauses: true,
-      mouseMovementSpeed: 'random',
+      mouseMovementSpeed: "random",
       typingSpeed: { min: 40, max: 80 }, // 40-80 WPM
       scrollSpeed: { min: 800, max: 1500 },
       ...options,
@@ -61,8 +61,8 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
   }
 
   private getMouseMovementSimulation(): string {
-    const speed = this.options.mouseMovementSpeed || 'random';
-    
+    const speed = this.options.mouseMovementSpeed || "random";
+
     return `
       // Realistic Mouse Movement Simulation using Bezier curves
       (function() {
@@ -183,7 +183,7 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
 
   private getTypingPatternSimulation(): string {
     const { min, max } = this.options.typingSpeed || { min: 40, max: 80 };
-    
+
     return `
       // Realistic Typing Pattern Simulation
       (function() {
@@ -281,7 +281,7 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
 
   private getScrollMomentumSimulation(): string {
     const { min, max } = this.options.scrollSpeed || { min: 800, max: 1500 };
-    
+
     return `
       // Realistic Scroll Momentum Simulation
       (function() {
@@ -423,7 +423,7 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
         const rect = element.getBoundingClientRect();
         const targetX = rect.left + rect.width / 2;
         const targetY = rect.top + rect.height / 2;
-        
+
         // Trigger the simulated mouse movement
         if (window.__humanMouseMove) {
           window.__humanMouseMove(targetX, targetY);
@@ -436,12 +436,16 @@ export class BehaviorSimulatorPlugin extends BasePlugin {
    * Utility method to simulate human-like typing
    */
   async typeHumanLike(page: Page, selector: string, text: string): Promise<void> {
-    await page.evaluate((sel, txt) => {
-      const element = document.querySelector(sel);
-      if (element && element instanceof HTMLElement && window.__humanTypeText) {
-        window.__humanTypeText(element, txt);
-      }
-    }, selector, text);
+    await page.evaluate(
+      (sel, txt) => {
+        const element = document.querySelector(sel);
+        if (element && element instanceof HTMLElement && window.__humanTypeText) {
+          window.__humanTypeText(element, txt);
+        }
+      },
+      selector,
+      text,
+    );
   }
 }
 

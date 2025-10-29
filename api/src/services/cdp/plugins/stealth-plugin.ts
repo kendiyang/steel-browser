@@ -1,5 +1,5 @@
-import { BasePlugin, PluginOptions } from './core/base-plugin.js';
-import { Browser, Page } from 'puppeteer-core';
+import { BasePlugin, PluginOptions } from "./core/base-plugin.js";
+import { Browser, Page } from "puppeteer-core";
 
 export interface StealthPluginOptions extends PluginOptions {
   enableCanvasNoise?: boolean;
@@ -22,7 +22,7 @@ export interface StealthPluginOptions extends PluginOptions {
  * - Chrome runtime detection
  * - Navigator plugins/mimeTypes detection
  * - Permissions API detection
- * 
+ *
  * @example
  * ```typescript
  * const stealthPlugin = new StealthPlugin({
@@ -38,7 +38,7 @@ export class StealthPlugin extends BasePlugin {
 
   constructor(options: Partial<StealthPluginOptions> = {}) {
     const fullOptions: StealthPluginOptions = {
-      name: 'stealth-plugin',
+      name: "stealth-plugin",
       enableCanvasNoise: true,
       enableAudioNoise: true,
       enableWebRTCProtection: true,
